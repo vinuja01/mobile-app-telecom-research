@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Button, StyleSheet } from "react-native";
+//this is for example
 
 const Login = ({ navigation }) => {
   const [username, setUsername] = useState("");
