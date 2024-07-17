@@ -4,12 +4,15 @@ const Site = require("../models/Site");
 
 // Add new site details
 router.post("/", async (req, res) => {
-  const { siteId, siteLocation, currentFaults } = req.body;
+  const { siteId, siteLocation, currentFaults, MaintainanceRecords, Date } =
+    req.body;
 
   const newSite = new Site({
     siteId,
     siteLocation,
     currentFaults,
+    MaintainanceRecords,
+    Date,
   });
 
   try {

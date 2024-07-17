@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const siteSchema = new mongoose.Schema({
   siteId: {
-    type: Number,
+    type: String,
     required: true,
   },
   siteLocation: {
@@ -10,7 +10,15 @@ const siteSchema = new mongoose.Schema({
     required: true,
   },
   currentFaults: {
-    type: String,
+    type: [String],
+    required: true,
+  },
+  MaintainanceRecords: {
+    type: [String],
+    required: true,
+  },
+  Date: {
+    type: Date,
     required: true,
   },
 });
