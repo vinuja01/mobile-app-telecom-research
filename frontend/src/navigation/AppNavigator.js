@@ -16,13 +16,13 @@ const AppNavigator = () => {
         name="Home"
         component={Home}
         options={{
-          title: "TELEMAN", // Customize the title displayed in the header
+          title: "TELEMAN",
           headerStyle: {
-            backgroundColor: "#6200ee", // Customize the header background color
+            backgroundColor: "#6200ee",
           },
-          headerTintColor: "#fff", // Customize the header text color
+          headerTintColor: "#fff",
           headerTitleStyle: {
-            fontWeight: "bold", // Customize the header title style
+            fontWeight: "bold",
           },
         }}
       />
