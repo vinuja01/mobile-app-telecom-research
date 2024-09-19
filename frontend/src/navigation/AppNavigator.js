@@ -5,6 +5,7 @@ import Home from "../components/Home";
 import EmployeeDetails from "../components/EmployeeDetails";
 import SiteDetails from "../components/SiteDetails";
 import Emergency from "../components/Emergency";
+import WorkingProofs from "../components/WorkingProofs";
 
 const Stack = createStackNavigator();
 
@@ -29,6 +30,7 @@ const AppNavigator = () => {
       <Stack.Screen name="EmployeeDetails" component={EmployeeDetails} />
       <Stack.Screen name="SiteDetails" component={SiteDetails} />
       <Stack.Screen name="Emergency" component={Emergency} />
+      <Stack.Screen name="WorkingProofs" component={WorkingProofs} />
     </Stack.Navigator>
   );
 };

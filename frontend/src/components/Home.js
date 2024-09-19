@@ -24,6 +24,14 @@ const Home = ({ navigation }) => {
 
         <Pressable
           style={styles.button}
+          onPress={() => navigation.navigate("WorkingProofs")}
+        >
+          <MaterialIcons name="place" size={24} color="white" />
+          <Text style={styles.buttonText}>WorkingProofs</Text>
+        </Pressable>
+
+        <Pressable
+          style={styles.button}
           onPress={() => navigation.navigate("Emergency")}
         >
           <MaterialIcons name="emergency" size={24} color="white" />

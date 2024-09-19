@@ -1,17 +1,26 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Button, StyleSheet } from "react-native";
-//this is for example
+import axios from "axios";
 
 const Login = ({ navigation }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleLogin = () => {
-    if (username === "admin" && password === "password") {
-      navigation.navigate("Home");
-    } else {
-      setError("Invalid username or password");
+  const handleLogin = async () => {
+    try {
+      const response = await axios.post("http://192.168.8.129:5001/api/login", {
+        username,
+        password,
+      });
+      if (response.data.message === "Login successful") {
+        navigation.navigate("Home");
+      } else {
+        setError("Invalid username or password");
+      }
+    } catch (error) {
+      setError("Connection error, please try again");
+      username, password;
     }
   };
 
