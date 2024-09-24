@@ -1,14 +1,14 @@
 import { StyleSheet, Text, View } from "react-native";
 import React from "react";
 
-const Emergency = () => {
+const EntranceAlerts = () => {
   return (
     <View>
-      <Text>Emergency</Text>
+      <Text>EntranceAlerts</Text>
     </View>
   );
 };
 
-export default Emergency;
+export default EntranceAlerts;
 
 const styles = StyleSheet.create({});

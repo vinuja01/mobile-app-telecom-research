@@ -22,20 +22,20 @@ const Home = ({ navigation }) => {
           <Text style={styles.buttonText}>Site Details</Text>
         </Pressable>
 
-        <Pressable
+        {/* <Pressable
           style={styles.button}
           onPress={() => navigation.navigate("WorkingProofs")}
         >
           <MaterialIcons name="place" size={24} color="white" />
           <Text style={styles.buttonText}>WorkingProofs</Text>
-        </Pressable>
+        </Pressable> */}
 
         <Pressable
           style={styles.button}
-          onPress={() => navigation.navigate("Emergency")}
+          onPress={() => navigation.navigate("EntranceAlerts")}
         >
           <MaterialIcons name="emergency" size={24} color="white" />
-          <Text style={styles.buttonText}>Emergency</Text>
+          <Text style={styles.buttonText}>Entrance Alerts</Text>
         </Pressable>
 
         <Pressable

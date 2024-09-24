@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 const cors = require("cors");
 const authRoutes = require("./routes/auth");
+const faceRecognitionRouter = require("./routes/face_recognition");
 
 const app = express();
 const port = 5001;
@@ -37,6 +38,7 @@ const siteRoutes = require("./routes/sites");
 app.use("/api/employees", employeeRoutes);
 app.use("/api/sites", siteRoutes);
 app.use("/api", authRoutes);
+app.use("/api/face-recognition", faceRecognitionRouter);
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
