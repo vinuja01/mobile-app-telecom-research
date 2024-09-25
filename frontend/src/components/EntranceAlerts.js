@@ -10,8 +10,9 @@ import {
 } from "react-native";
 import io from "socket.io-client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Notifications from "expo-notifications";
 
-const SOCKET_SERVER_URL = "http://192.168.8.129:5001";
+const SOCKET_SERVER_URL = "http://192.168.8.129:5001"; // Ensure this is correct
 const STORAGE_KEY = "@entrance_alerts_notifications";
 
 const EntranceAlerts = () => {
@@ -79,11 +80,14 @@ const EntranceAlerts = () => {
 
       socket.on("notification", async (data) => {
         console.log("Received notification:", data);
+        const is_known =
+          data.isKnown !== undefined ? data.isKnown : data.user !== "Unknown";
         const newNotification = {
           key: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Unique key
           user: data.user,
           confidence: data.confidence,
-          timestamp: new Date().toISOString(),
+          timestamp: new Date(data.timestamp).toISOString(),
+          isKnown: is_known,
         };
         setNotifications((prevNotifications) => {
           const updatedNotifications = purgeOldNotifications([
@@ -92,6 +96,18 @@ const EntranceAlerts = () => {
           ]);
           // Save to storage
           saveNotificationsToStorage(updatedNotifications);
+          console.log("Updated notifications:", updatedNotifications);
+
+          // Trigger a local notification
+          Notifications.scheduleNotificationAsync({
+            content: {
+              title: is_known ? "Face Recognized!" : "Unknown Face Detected!",
+              body: `User: ${data.user}\nConfidence: ${data.confidence}%`,
+              data: { ...newNotification },
+            },
+            trigger: null, // Send immediately
+          });
+
           return updatedNotifications;
         });
       });
@@ -142,6 +158,24 @@ const EntranceAlerts = () => {
     setRefreshing(false);
   };
 
+  const renderItem = ({ item }) => (
+    <View style={styles.card}>
+      <Text
+        style={[
+          styles.cardTitle,
+          { color: item.isKnown ? "#4CAF50" : "#F44336" },
+        ]}
+      >
+        {item.isKnown ? "Face Recognized!" : "Unknown Face Detected!"}
+      </Text>
+      <Text style={styles.cardBody}>User: {item.user}</Text>
+      <Text style={styles.cardBody}>Confidence: {item.confidence}%</Text>
+      <Text style={styles.cardTimestamp}>
+        {new Date(item.timestamp).toLocaleString()}
+      </Text>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Entrance Alerts</Text>
@@ -150,18 +184,8 @@ const EntranceAlerts = () => {
       ) : (
         <FlatList
           data={notifications}
-          renderItem={({ item }) => (
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Face Recognized!</Text>
-              <Text style={styles.cardBody}>User: {item.user}</Text>
-              <Text style={styles.cardBody}>
-                Confidence: {item.confidence}%
-              </Text>
-              <Text style={styles.cardTimestamp}>
-                {new Date(item.timestamp).toLocaleString()}
-              </Text>
-            </View>
-          )}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.key}
           ListEmptyComponent={<Text style={styles.noData}>No alerts yet.</Text>}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -202,13 +226,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 5,
+    color: "#333",
   },
   cardBody: {
     fontSize: 16,
+    color: "#555",
   },
   cardTimestamp: {
     fontSize: 12,
-    color: "#555",
+    color: "#888",
     marginTop: 5,
   },
   noData: {
