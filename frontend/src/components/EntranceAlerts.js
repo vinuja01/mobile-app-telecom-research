@@ -1,4 +1,4 @@
-// EntranceAlerts.js
+// src/screens/EntranceAlerts.js
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -9,64 +9,38 @@ import {
   RefreshControl,
 } from "react-native";
 import io from "socket.io-client";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 import * as Notifications from "expo-notifications";
 
-const SOCKET_SERVER_URL = "http://192.168.8.129:5001"; // Ensure this is correct
-const STORAGE_KEY = "@entrance_alerts_notifications";
+const SOCKET_SERVER_URL = "http://192.168.8.129:5001"; // Ensure this is correct and accessible
+const API_BASE_URL = "http://192.168.8.129:5001/api/face-recognition"; // Adjust as needed
 
 const EntranceAlerts = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Utility functions
-  const loadNotificationsFromStorage = async () => {
+  // Function to fetch alerts from the backend
+  const fetchAlerts = async () => {
     try {
-      const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
-      const loadedNotifications =
-        jsonValue != null ? JSON.parse(jsonValue) : [];
-      console.log("Notifications loaded from storage:", loadedNotifications);
-      return loadedNotifications;
-    } catch (e) {
-      console.error("Failed to load notifications from storage", e);
-      return [];
+      const response = await axios.get(`${API_BASE_URL}/alerts`);
+      setNotifications(response.data);
+      console.log("Fetched alerts from backend:", response.data);
+    } catch (error) {
+      console.error("Error fetching alerts:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
-  };
-
-  const saveNotificationsToStorage = async (notifications) => {
-    try {
-      const jsonValue = JSON.stringify(notifications);
-      await AsyncStorage.setItem(STORAGE_KEY, jsonValue);
-      console.log("Notifications saved to storage:", notifications);
-    } catch (e) {
-      console.error("Failed to save notifications to storage", e);
-    }
-  };
-
-  const purgeOldNotifications = (notifications) => {
-    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const purged = notifications.filter((notification) => {
-      const notificationTime = new Date(notification.timestamp).getTime();
-      console.log(
-        `Notification Time: ${notificationTime}, Seven Days Ago: ${sevenDaysAgo}`
-      );
-      return notificationTime >= sevenDaysAgo;
-    });
-    console.log("Purged Notifications:", purged);
-    return purged;
   };
 
   useEffect(() => {
     let socket;
     let cleanupInterval;
 
-    const setupSocket = async () => {
-      // Load notifications from storage
-      const storedNotifications = await loadNotificationsFromStorage();
-      const purgedNotifications = purgeOldNotifications(storedNotifications);
-      setNotifications(purgedNotifications);
-      await saveNotificationsToStorage(purgedNotifications);
+    const setup = async () => {
+      // Fetch existing alerts
+      await fetchAlerts();
 
       // Initialize Socket.io connection
       socket = io(SOCKET_SERVER_URL, {
@@ -82,21 +56,24 @@ const EntranceAlerts = () => {
         console.log("Received notification:", data);
         const is_known =
           data.isKnown !== undefined ? data.isKnown : data.user !== "Unknown";
+        console.log("is_known:", is_known);
         const newNotification = {
-          key: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Unique key
+          _id:
+            data._id ||
+            `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Unique key
           user: data.user,
           confidence: data.confidence,
-          timestamp: new Date(data.timestamp).toISOString(),
+          timestamp: data.timestamp
+            ? new Date(data.timestamp).toISOString()
+            : new Date().toISOString(),
           isKnown: is_known,
         };
+        console.log("New Notification Object:", newNotification);
         setNotifications((prevNotifications) => {
-          const updatedNotifications = purgeOldNotifications([
+          const updatedNotifications = [
             newNotification,
             ...prevNotifications,
-          ]);
-          // Save to storage
-          saveNotificationsToStorage(updatedNotifications);
-          console.log("Updated notifications:", updatedNotifications);
+          ].slice(0, 100); // Keep latest 100
 
           // Trigger a local notification
           Notifications.scheduleNotificationAsync({
@@ -104,9 +81,18 @@ const EntranceAlerts = () => {
               title: is_known ? "Face Recognized!" : "Unknown Face Detected!",
               body: `User: ${data.user}\nConfidence: ${data.confidence}%`,
               data: { ...newNotification },
+              android: {
+                channelId: "entrance-alerts",
+              },
             },
             trigger: null, // Send immediately
-          });
+          })
+            .then(() => {
+              console.log("Notification scheduled successfully");
+            })
+            .catch((error) => {
+              console.error("Error scheduling notification:", error);
+            });
 
           return updatedNotifications;
         });
@@ -120,21 +106,24 @@ const EntranceAlerts = () => {
         console.error("Connection error:", err);
       });
 
-      // Setup periodic cleanup every hour
-      cleanupInterval = setInterval(async () => {
-        const currentNotifications = await loadNotificationsFromStorage();
-        const purgedNotifications = purgeOldNotifications(currentNotifications);
-        if (purgedNotifications.length !== currentNotifications.length) {
-          setNotifications(purgedNotifications);
-          await saveNotificationsToStorage(purgedNotifications);
-          console.log("Purged old notifications");
-        }
+      // Setup periodic cleanup every hour (optional)
+      cleanupInterval = setInterval(() => {
+        setNotifications((currentNotifications) => {
+          const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+          const purged = currentNotifications.filter((notification) => {
+            const notificationTime = new Date(notification.timestamp).getTime();
+            return notificationTime >= sevenDaysAgo;
+          });
+          if (purged.length !== currentNotifications.length) {
+            console.log("Purged old notifications");
+            return purged;
+          }
+          return currentNotifications;
+        });
       }, 60 * 60 * 1000); // Every hour
-
-      setLoading(false); // Loading complete after setting up
     };
 
-    setupSocket();
+    setup();
 
     // Cleanup on unmount
     return () => {
@@ -146,35 +135,33 @@ const EntranceAlerts = () => {
         clearInterval(cleanupInterval);
       }
     };
-  }, []); // Empty dependency array to run once
+  }, []);
 
   const onRefresh = async () => {
-    // Since we're not fetching historical data from the backend, refreshing can simply reload from storage
     setRefreshing(true);
-    const storedNotifications = await loadNotificationsFromStorage();
-    const purgedNotifications = purgeOldNotifications(storedNotifications);
-    setNotifications(purgedNotifications);
-    await saveNotificationsToStorage(purgedNotifications);
-    setRefreshing(false);
+    await fetchAlerts();
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <Text
-        style={[
-          styles.cardTitle,
-          { color: item.isKnown ? "#4CAF50" : "#F44336" },
-        ]}
-      >
-        {item.isKnown ? "Face Recognized!" : "Unknown Face Detected!"}
-      </Text>
-      <Text style={styles.cardBody}>User: {item.user}</Text>
-      <Text style={styles.cardBody}>Confidence: {item.confidence}%</Text>
-      <Text style={styles.cardTimestamp}>
-        {new Date(item.timestamp).toLocaleString()}
-      </Text>
-    </View>
-  );
+  const renderItem = ({ item }) => {
+    console.log("Rendering item:", item);
+    return (
+      <View style={styles.card}>
+        <Text
+          style={[
+            styles.cardTitle,
+            { color: item.isKnown ? "#4CAF50" : "#F44336" },
+          ]}
+        >
+          {item.isKnown ? "Face Recognized!" : "Unknown Face Detected!"}
+        </Text>
+        <Text style={styles.cardBody}>User: {item.user}</Text>
+        <Text style={styles.cardBody}>Confidence: {item.confidence}%</Text>
+        <Text style={styles.cardTimestamp}>
+          {new Date(item.timestamp).toLocaleString()}
+        </Text>
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -185,7 +172,7 @@ const EntranceAlerts = () => {
         <FlatList
           data={notifications}
           renderItem={renderItem}
-          keyExtractor={(item) => item.key}
+          keyExtractor={(item) => item._id.toString()}
           ListEmptyComponent={<Text style={styles.noData}>No alerts yet.</Text>}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />

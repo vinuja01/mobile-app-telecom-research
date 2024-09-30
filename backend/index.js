@@ -3,8 +3,10 @@ const express = require("express");
 const mongoose = require("mongoose");
 require("dotenv").config();
 const cors = require("cors");
-const http = require("http"); // Import the HTTP module
-const { Server } = require("socket.io"); // Import Socket.io
+const http = require("http");
+const { Server } = require("socket.io");
+
+// Importing Routes
 const authRoutes = require("./routes/auth");
 const faceRecognitionRouter = require("./routes/face_recognition");
 const employeeRoutes = require("./routes/employees");
@@ -19,20 +21,20 @@ const server = http.createServer(app);
 // Initialize Socket.io server
 const io = new Server(server, {
   cors: {
-    origin: "*", // Adjust as needed for security
-    methods: ["GET", "POST"],
+    origin: "*", // Adjust for security in production
+    methods: ["GET", "POST", "PUT", "DELETE"],
   },
 });
 
-// Middleware
+// Middleware Configuration
 app.use(
   cors({
-    origin: "*",
+    origin: "*", // Replace "*" with your frontend's URL in production for better security
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type"],
   })
 );
-app.use(express.json());
+app.use(express.json()); // To parse JSON bodies
 
 // MongoDB Connection
 mongoose
@@ -40,16 +42,16 @@ mongoose
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("Could not connect to MongoDB", err));
 
-// Basic route
+// Basic Route
 app.get("/", (req, res) => {
   res.send("Server is running");
 });
 
-// Routes
+// Registering Routes
 app.use("/api/employees", employeeRoutes);
 app.use("/api/sites", siteRoutes);
 app.use("/api", authRoutes);
-app.use("/api/face-recognition", faceRecognitionRouter);
+app.use("/api/face-recognition", faceRecognitionRouter); // Face Recognition Routes
 
 // Handle Socket.io connections
 io.on("connection", (socket) => {
@@ -63,7 +65,7 @@ io.on("connection", (socket) => {
 // Make io accessible to routes
 app.set("io", io);
 
-// Start the server
+// Start the Server
 server.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
