@@ -12,8 +12,8 @@ import io from "socket.io-client";
 import axios from "axios";
 import * as Notifications from "expo-notifications";
 
-const SOCKET_SERVER_URL = "http://192.168.8.129:5001"; // Ensure this is correct and accessible
-const API_BASE_URL = "http://192.168.8.129:5001/api/face-recognition"; // Adjust as needed
+const SOCKET_SERVER_URL = "http://192.168.140.193:5001"; // Ensure this is correct and accessible
+const API_BASE_URL = "http://192.168.140.193:5001/api/face-recognition"; // Adjust as needed
 
 const EntranceAlerts = () => {
   const [notifications, setNotifications] = useState([]);

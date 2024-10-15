@@ -41,7 +41,7 @@ const EmployeeDetails = () => {
 
     try {
       const response = await axios.post(
-        "http://192.168.8.129:5001/api/employees",
+        "http://192.168.140.193:5001/api/employees",
         employeeData
       );
       console.log("Response:", response.data); // Log the response data

@@ -39,7 +39,7 @@ const SiteDetails = () => {
 
     try {
       const response = await axios.post(
-        "http://192.168.8.129:5001/api/sites",
+        "http://192.168.140.193:5001/api/sites",
         siteData
       );
       console.log("Response:", response.data); // Log the response data
