@@ -1,26 +1,38 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Alert,
   Image,
   Pressable,
   SafeAreaView,
   StyleSheet,
-  Switch,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import axios from "axios";
 import { Feather } from "@expo/vector-icons";
 
 const logo = require("../../assets/site360.png");
 
-export default function Login({ navigation }) {
+export default function Login({ navigation, route }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [passwordVisibility, setPasswordVisibility] = useState(false);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      // Check if reset parameter is true
+      if (route.params?.reset) {
+        setUsername("");
+        setPassword("");
+        setError("");
+        // Optionally reset the parameter to avoid unwanted resets
+        navigation.setParams({ reset: false });
+      }
+    }, [route.params])
+  );
 
   const handleLogin = async () => {
     if (!username || !password) {
@@ -29,20 +41,17 @@ export default function Login({ navigation }) {
     }
 
     try {
-      const response = await axios.post(
-        "http://192.168.140.193:5001/api/login",
-        {
-          username,
-          password,
-        }
-      );
+      const response = await axios.post("http://192.168.8.129:5001/api/login", {
+        username,
+        password,
+      });
       if (response.data.message === "Login successful") {
         navigation.navigate("Home");
       } else {
         setError("Invalid username or password");
       }
     } catch (error) {
-      setError("Login failed. Check connection.");
+      setError("Login failed.");
     }
   };
 
@@ -99,7 +108,7 @@ const styles = StyleSheet.create({
   container: {
     alignItems: "center",
     paddingTop: 70,
-    backgroundColor: "lightgray",
+    backgroundColor: "#F0EBE3",
     height: "100%",
   },
   image: {

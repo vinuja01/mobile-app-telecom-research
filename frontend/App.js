@@ -1,14 +1,17 @@
-// App.js
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Platform } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import AppNavigator from "./src/navigation/AppNavigator";
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
+import io from "socket.io-client";
+
+const SOCKET_SERVER_URL = "http://192.168.8.129:5001";
 
 export default function App() {
   const notificationListener = useRef();
   const responseListener = useRef();
+  const socketRef = useRef(null);
 
   useEffect(() => {
     // Configure notification handler to show alerts even when app is in foreground
@@ -20,8 +23,40 @@ export default function App() {
       }),
     });
 
-    // Request permissions
+    // Request permissions and setup push notifications
     registerForPushNotificationsAsync();
+
+    // Setup Socket.io connection
+    socketRef.current = io(SOCKET_SERVER_URL, {
+      transports: ["websocket"],
+      forceNew: true,
+    });
+
+    socketRef.current.on("connect", () => {
+      console.log("Connected to Socket.io server:", socketRef.current.id);
+    });
+
+    socketRef.current.on("notification", async (data) => {
+      console.log("Received notification:", data);
+      const is_known =
+        data.isKnown !== undefined ? data.isKnown : data.user !== "Unknown";
+      Notifications.scheduleNotificationAsync({
+        content: {
+          title: is_known ? "Face Recognized!" : "Unknown Face Detected!",
+          body: `User: ${data.user}\nConfidence: ${data.confidence}%`,
+          data: { ...data },
+        },
+        trigger: null, // Send immediately
+      });
+    });
+
+    socketRef.current.on("disconnect", () => {
+      console.log("Disconnected from Socket.io server");
+    });
+
+    socketRef.current.on("connect_error", (err) => {
+      console.error("Connection error:", err);
+    });
 
     // Listener for incoming notifications while app is foregrounded
     notificationListener.current =
@@ -36,13 +71,16 @@ export default function App() {
       });
 
     return () => {
-      // Clean up listeners on unmount
+      // Clean up listeners and socket on unmount
       if (notificationListener.current)
         Notifications.removeNotificationSubscription(
           notificationListener.current
         );
       if (responseListener.current)
         Notifications.removeNotificationSubscription(responseListener.current);
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
     };
   }, []);
 
@@ -70,7 +108,6 @@ async function registerForPushNotificationsAsync() {
     }
     token = (await Notifications.getExpoPushTokenAsync()).data;
     console.log("Expo Push Token:", token);
-    // You can send the token to your backend if you plan to use Expo Push Notifications
   } else {
     alert("Must use physical device for Push Notifications");
   }

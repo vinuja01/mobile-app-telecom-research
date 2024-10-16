@@ -1,4 +1,3 @@
-// src/screens/EntranceAlerts.js
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -7,13 +6,14 @@ import {
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
+  Platform,
 } from "react-native";
 import io from "socket.io-client";
 import axios from "axios";
 import * as Notifications from "expo-notifications";
 
-const SOCKET_SERVER_URL = "http://192.168.140.193:5001"; // Ensure this is correct and accessible
-const API_BASE_URL = "http://192.168.140.193:5001/api/face-recognition"; // Adjust as needed
+const SOCKET_SERVER_URL = "http://192.168.8.129:5001"; // Ensure this is correct and accessible
+const API_BASE_URL = "http://192.168.8.129:5001/api/face-recognition"; // Adjust as needed
 
 const EntranceAlerts = () => {
   const [notifications, setNotifications] = useState([]);
@@ -39,6 +39,22 @@ const EntranceAlerts = () => {
     let cleanupInterval;
 
     const setup = async () => {
+      // Request notification permissions
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== "granted") {
+        alert("Permission for notifications not granted!");
+        return;
+      }
+
+      // Set up notification channel for Android
+      if (Platform.OS === "android") {
+        await Notifications.setNotificationChannelAsync("entrance-alerts", {
+          name: "Entrance Alerts",
+          importance: Notifications.AndroidImportance.HIGH,
+          sound: "default",
+        });
+      }
+
       // Fetch existing alerts
       await fetchAlerts();
 
@@ -56,7 +72,6 @@ const EntranceAlerts = () => {
         console.log("Received notification:", data);
         const is_known =
           data.isKnown !== undefined ? data.isKnown : data.user !== "Unknown";
-        console.log("is_known:", is_known);
         const newNotification = {
           _id:
             data._id ||
@@ -149,13 +164,14 @@ const EntranceAlerts = () => {
         <Text
           style={[
             styles.cardTitle,
-            { color: item.isKnown ? "#4CAF50" : "#F44336" },
+            { color: item.isKnown ? "#4CAF50" : "#4CAF50" },
           ]}
         >
-          {item.isKnown ? "Face Recognized!" : "Unknown Face Detected!"}
+          {item.isKnown ? "Face Recognized!" : " Face Detected!"}
         </Text>
         <Text style={styles.cardBody}>User: {item.user}</Text>
         <Text style={styles.cardBody}>Confidence: {item.confidence}%</Text>
+        <Text style={styles.cardBody}>Location: Hanwella</Text>
         <Text style={styles.cardTimestamp}>
           {new Date(item.timestamp).toLocaleString()}
         </Text>
@@ -165,7 +181,7 @@ const EntranceAlerts = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Entrance Alerts</Text>
+      <Text style={styles.header}>Site Entrance Alerts</Text>
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
@@ -189,16 +205,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#f2f2f2",
+    backgroundColor: "#F0EBE3",
   },
   header: {
     fontSize: 24,
     marginBottom: 20,
     textAlign: "center",
     fontWeight: "bold",
+    color: "brown",
   },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: "#F8EDED",
     width: "100%",
     padding: 15,
     borderRadius: 10,

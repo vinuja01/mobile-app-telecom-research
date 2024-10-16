@@ -4,13 +4,15 @@ import {
   View,
   Text,
   TextInput,
-  Button,
   ScrollView,
   Alert,
-  Platform,
+  Image,
+  TouchableOpacity,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import axios from "axios";
+
+const logo = require("../../assets/site360.png");
 
 const EmployeeDetails = () => {
   const [employeeId, setEmployeeId] = useState("");
@@ -24,27 +26,45 @@ const EmployeeDetails = () => {
 
   const handleDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || arrivalDate;
-    setShowDatePicker(Platform.OS === "ios"); // Hide date picker after selection
+    setShowDatePicker(false);
     setArrivalDate(currentDate);
   };
 
+  const validateFields = () => {
+    if (
+      !employeeId.trim() ||
+      !employeeName.trim() ||
+      !siteLocation.trim() ||
+      !designation.trim() ||
+      !tasksDone.trim() ||
+      !hoursSpent.trim()
+    ) {
+      Alert.alert("Missing Information", "Please fill all the fields.");
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async () => {
+    if (!validateFields()) {
+      return; // Stop the submission if validation fails
+    }
+
     const employeeData = {
       employeeId,
       employeeName,
-      arrivalDate: arrivalDate.toISOString(), // Ensure date is in ISO format
+      arrivalDate: arrivalDate.toISOString(),
       siteLocation,
       designation,
-      tasksDone: tasksDone.split(", "), // Assuming tasks are entered and separated by a comma
-      hoursSpent: parseInt(hoursSpent, 10), // Ensure hoursSpent is a number
+      tasksDone: tasksDone.split(", "),
+      hoursSpent: parseInt(hoursSpent, 10),
     };
 
     try {
       const response = await axios.post(
-        "http://192.168.140.193:5001/api/employees",
+        "http://192.168.8.129:5001/api/employees",
         employeeData
       );
-      console.log("Response:", response.data); // Log the response data
       if (response.status === 201) {
         Alert.alert("Success", "Employee details added successfully");
         // Clear the form
@@ -62,7 +82,6 @@ const EmployeeDetails = () => {
         );
       }
     } catch (error) {
-      console.error("Failed to submit employee details", error);
       Alert.alert(
         "Error",
         `Failed to submit employee details: ${error.message}`
@@ -71,29 +90,36 @@ const EmployeeDetails = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.label}>Employee ID</Text>
-      <TextInput
-        style={styles.input}
-        value={employeeId}
-        onChangeText={setEmployeeId}
-        placeholder="Enter Employee ID"
-      />
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+    >
+      <Image source={logo} style={styles.image} resizeMode="contain" />
 
-      <Text style={styles.label}>Employee Name</Text>
-      <TextInput
-        style={styles.input}
-        value={employeeName}
-        onChangeText={setEmployeeName}
-        placeholder="Enter Employee Name"
-      />
-
-      <Text style={styles.label}>Arrival Date</Text>
-      <View>
-        <Button
-          title="Show Date Picker"
-          onPress={() => setShowDatePicker(true)}
+      <View style={styles.inputView}>
+        <Text style={styles.label}>Employee ID</Text>
+        <TextInput
+          style={styles.input}
+          value={employeeId}
+          onChangeText={setEmployeeId}
+          placeholder="Enter Employee ID"
         />
+
+        <Text style={styles.label}>Employee Name</Text>
+        <TextInput
+          style={styles.input}
+          value={employeeName}
+          onChangeText={setEmployeeName}
+          placeholder="Enter Employee Name"
+        />
+
+        <Text style={styles.label}>Arrival Date</Text>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => setShowDatePicker(true)}
+        >
+          <Text style={styles.buttonText}>Show Date Picker</Text>
+        </TouchableOpacity>
         {showDatePicker && (
           <DateTimePicker
             value={arrivalDate}
@@ -102,62 +128,94 @@ const EmployeeDetails = () => {
             onChange={handleDateChange}
           />
         )}
+
+        <View style={{ marginBottom: 20 }}></View>
+
+        <Text style={styles.label}>Site Location</Text>
+        <TextInput
+          style={styles.input}
+          value={siteLocation}
+          onChangeText={setSiteLocation}
+          placeholder="Enter Site Location"
+        />
+
+        <Text style={styles.label}>Designation</Text>
+        <TextInput
+          style={styles.input}
+          value={designation}
+          onChangeText={setDesignation}
+          placeholder="Enter Designation"
+        />
+
+        <Text style={styles.label}>Tasks Done (separated by commas)</Text>
+        <TextInput
+          style={styles.input}
+          value={tasksDone}
+          onChangeText={setTasksDone}
+          placeholder="Enter Tasks Done"
+        />
+
+        <Text style={styles.label}>Hours Spent</Text>
+        <TextInput
+          style={styles.input}
+          value={hoursSpent}
+          keyboardType="numeric"
+          onChangeText={setHoursSpent}
+          placeholder="Enter Hours Spent"
+        />
+
+        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+          <Text style={styles.buttonText}>Submit</Text>
+        </TouchableOpacity>
       </View>
-
-      <Text style={styles.label}>Site Location</Text>
-      <TextInput
-        style={styles.input}
-        value={siteLocation}
-        onChangeText={setSiteLocation}
-        placeholder="Enter Site Location"
-      />
-
-      <Text style={styles.label}>Designation</Text>
-      <TextInput
-        style={styles.input}
-        value={designation}
-        onChangeText={setDesignation}
-        placeholder="Enter Designation"
-      />
-
-      <Text style={styles.label}>Tasks Done (separated by commas)</Text>
-      <TextInput
-        style={styles.input}
-        value={tasksDone}
-        onChangeText={setTasksDone}
-        placeholder="Enter Tasks Done"
-      />
-
-      <Text style={styles.label}>Hours Spent</Text>
-      <TextInput
-        style={styles.input}
-        value={hoursSpent}
-        keyboardType="numeric"
-        onChangeText={setHoursSpent}
-        placeholder="Enter Hours Spent"
-      />
-
-      <Button title="Submit" onPress={handleSubmit} />
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    backgroundColor: "white",
+    flex: 1,
+    backgroundColor: "#F0EBE3",
+  },
+  contentContainer: {
+    alignItems: "center",
+    paddingTop: 30,
+  },
+  inputView: {
+    width: "90%",
+    paddingHorizontal: 15,
+    marginBottom: 10,
+  },
+  image: {
+    height: 150,
+    width: 170,
+    marginBottom: 30,
   },
   input: {
-    height: 40,
-    borderColor: "gray",
+    height: 50,
+    paddingHorizontal: 20,
+    backgroundColor: "white",
+    borderColor: "#ddd",
     borderWidth: 1,
-    marginBottom: 12,
-    paddingHorizontal: 10,
-    borderRadius: 4,
+    borderRadius: 7,
+    marginBottom: 20,
   },
   label: {
     fontWeight: "bold",
     marginBottom: 5,
+    color: "brown",
+  },
+  button: {
+    backgroundColor: "brown",
+    padding: 10,
+    borderRadius: 5,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 

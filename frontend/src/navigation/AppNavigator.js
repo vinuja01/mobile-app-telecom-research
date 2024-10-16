@@ -32,14 +32,15 @@ const AppNavigator = () => {
         name="Home"
         component={Home}
         options={{
-          title: "TELEMAN",
+          title: "Home Page",
           headerStyle: {
-            backgroundColor: "#6200ee",
+            backgroundColor: "brown",
           },
           headerTintColor: "#fff",
           headerTitleStyle: {
             fontWeight: "bold",
           },
+          headerTitleAlign: "center",
         }}
       />
       <Stack.Screen
@@ -48,40 +49,43 @@ const AppNavigator = () => {
         options={{
           title: "Employee Details",
           headerStyle: {
-            backgroundColor: "#6200ee",
+            backgroundColor: "brown",
           },
           headerTintColor: "#fff",
           headerTitleStyle: {
             fontWeight: "bold",
           },
+          headerTitleAlign: "center",
         }}
       />
       <Stack.Screen
         name="SiteDetails"
         component={SiteDetails}
         options={{
-          title: "TELEMAN",
+          title: "Site Details",
           headerStyle: {
-            backgroundColor: "#6200ee",
+            backgroundColor: "brown",
           },
           headerTintColor: "#fff",
           headerTitleStyle: {
             fontWeight: "bold",
           },
+          headerTitleAlign: "center",
         }}
       />
       <Stack.Screen
         name="EntranceAlerts"
         component={EntranceAlerts}
         options={{
-          title: "TELEMAN",
+          title: "Site 360",
           headerStyle: {
-            backgroundColor: "#6200ee",
+            backgroundColor: "brown",
           },
           headerTintColor: "#fff",
           headerTitleStyle: {
             fontWeight: "bold",
           },
+          headerTitleAlign: "center",
         }}
       />
       <Stack.Screen

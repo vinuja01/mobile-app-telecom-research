@@ -4,13 +4,16 @@ import {
   View,
   Text,
   TextInput,
-  Button,
   ScrollView,
   Alert,
+  Image,
+  TouchableOpacity,
   Platform,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import axios from "axios";
+
+const logo = require("../../assets/site360.png");
 
 const SiteDetails = () => {
   const [siteId, setSiteId] = useState("");
@@ -22,7 +25,7 @@ const SiteDetails = () => {
 
   const handleDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || date;
-    setShowDatePicker(Platform.OS === "ios"); // Hide date picker after selection
+    setShowDatePicker(Platform.OS === "ios"); // Only keep showing date picker on iOS
     setDate(currentDate);
   };
 
@@ -39,13 +42,11 @@ const SiteDetails = () => {
 
     try {
       const response = await axios.post(
-        "http://192.168.140.193:5001/api/sites",
+        "http://192.168.8.129:5001/api/sites",
         siteData
       );
-      console.log("Response:", response.data); // Log the response data
       if (response.status === 201) {
         Alert.alert("Success", "Site details added successfully");
-        // Clear the form
         setSiteId("");
         setSiteLocation("");
         setDate(new Date());
@@ -58,35 +59,38 @@ const SiteDetails = () => {
         );
       }
     } catch (error) {
-      console.error("Failed to submit site details", error);
       Alert.alert("Error", `Failed to submit site details: ${error.message}`);
     }
   };
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.label}>Site ID</Text>
-      <TextInput
-        style={styles.input}
-        value={siteId}
-        onChangeText={setSiteId}
-        placeholder="Enter ID number of the site"
-      />
+      <Image source={logo} style={styles.image} resizeMode="contain" />
 
-      <Text style={styles.label}>Site Location</Text>
-      <TextInput
-        style={styles.input}
-        value={siteLocation}
-        onChangeText={setSiteLocation}
-        placeholder="Enter Location of the Site"
-      />
-
-      <Text style={styles.label}>Date</Text>
-      <View>
-        <Button
-          title="Show Date Picker"
-          onPress={() => setShowDatePicker(true)}
+      <View style={styles.inputView}>
+        <Text style={styles.label}>Site ID</Text>
+        <TextInput
+          style={styles.input}
+          value={siteId}
+          onChangeText={setSiteId}
+          placeholder="Enter ID number of the site"
         />
+
+        <Text style={styles.label}>Site Location</Text>
+        <TextInput
+          style={styles.input}
+          value={siteLocation}
+          onChangeText={setSiteLocation}
+          placeholder="Enter Location of the Site"
+        />
+
+        <Text style={styles.label}>Date</Text>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => setShowDatePicker(true)}
+        >
+          <Text style={styles.buttonText}>Show Date Picker</Text>
+        </TouchableOpacity>
         {showDatePicker && (
           <DateTimePicker
             value={date}
@@ -95,45 +99,72 @@ const SiteDetails = () => {
             onChange={handleDateChange}
           />
         )}
+
+        <Text style={styles.label}>Current Faults In Site</Text>
+        <TextInput
+          style={styles.input}
+          value={currentFaults}
+          onChangeText={setCurrentFaults}
+          placeholder="Enter Current Faults (comma-separated)"
+        />
+
+        <Text style={styles.label}>Maintenance Records</Text>
+        <TextInput
+          style={styles.input}
+          value={maintenanceRecords}
+          onChangeText={setMaintenanceRecords}
+          placeholder="Enter Maintenance Records (comma-separated)"
+        />
+
+        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+          <Text style={styles.buttonText}>Submit</Text>
+        </TouchableOpacity>
       </View>
-
-      <Text style={styles.label}>Current Faults In Site</Text>
-      <TextInput
-        style={styles.input}
-        value={currentFaults}
-        onChangeText={setCurrentFaults}
-        placeholder="Enter Current Faults (comma-separated)"
-      />
-
-      <Text style={styles.label}>Maintenance Records</Text>
-      <TextInput
-        style={styles.input}
-        value={maintenanceRecords}
-        onChangeText={setMaintenanceRecords}
-        placeholder="Enter Maintenance Records (comma-separated)"
-      />
-
-      <Button title="Submit" onPress={handleSubmit} />
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    backgroundColor: "#F0EBE3",
     padding: 20,
-    backgroundColor: "white",
+  },
+  inputView: {
+    width: "100%",
+  },
+  image: {
+    height: 150,
+    width: 170,
+    marginBottom: 30,
+    alignSelf: "center", // Center the logo image
   },
   input: {
-    height: 40,
-    borderColor: "gray",
+    height: 50,
+    borderColor: "#ddd",
     borderWidth: 1,
-    marginBottom: 12,
-    paddingHorizontal: 10,
-    borderRadius: 4,
+    borderRadius: 7,
+    marginBottom: 20,
+    paddingHorizontal: 20,
+    backgroundColor: "white",
   },
   label: {
     fontWeight: "bold",
     marginBottom: 5,
+    color: "brown",
+  },
+  button: {
+    backgroundColor: "brown",
+    padding: 10,
+    borderRadius: 5,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  buttonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 
