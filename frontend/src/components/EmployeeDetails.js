@@ -8,7 +8,9 @@ import {
   Alert,
   Image,
   TouchableOpacity,
+  Platform,
 } from "react-native";
+import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import axios from "axios";
 
@@ -23,6 +25,29 @@ const EmployeeDetails = () => {
   const [tasksDone, setTasksDone] = useState("");
   const [hoursSpent, setHoursSpent] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const siteOptions = [
+    "Dompe",
+    "Biyagama",
+    "Kaduwela",
+    "Malwana",
+    "Hanwella",
+    "Padukka",
+    "Horana",
+    "Homagama",
+    "Ragama",
+    "Delgoda",
+    "Kelaniya",
+    "Kiribathgoda",
+  ];
+  const designationOptions = [
+    "Site Supervisor",
+    "Mechanical Engineer",
+    "Hardware Engineer",
+    "Electrical Engineer",
+    "Network Engineer",
+    "Cleaner",
+  ];
 
   const handleDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || arrivalDate;
@@ -132,20 +157,26 @@ const EmployeeDetails = () => {
         <View style={{ marginBottom: 20 }}></View>
 
         <Text style={styles.label}>Site Location</Text>
-        <TextInput
-          style={styles.input}
-          value={siteLocation}
-          onChangeText={setSiteLocation}
-          placeholder="Enter Site Location"
-        />
+        <Picker
+          selectedValue={siteLocation}
+          style={styles.picker}
+          onValueChange={(itemValue, itemIndex) => setSiteLocation(itemValue)}
+        >
+          {siteOptions.map((site, index) => (
+            <Picker.Item key={index} label={site} value={site} />
+          ))}
+        </Picker>
 
         <Text style={styles.label}>Designation</Text>
-        <TextInput
-          style={styles.input}
-          value={designation}
-          onChangeText={setDesignation}
-          placeholder="Enter Designation"
-        />
+        <Picker
+          selectedValue={designation}
+          style={styles.picker}
+          onValueChange={(itemValue, itemIndex) => setDesignation(itemValue)}
+        >
+          {designationOptions.map((role, index) => (
+            <Picker.Item key={index} label={role} value={role} />
+          ))}
+        </Picker>
 
         <Text style={styles.label}>Tasks Done (separated by commas)</Text>
         <TextInput
@@ -211,11 +242,17 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     justifyContent: "center",
     alignItems: "center",
+    marginBottom: 20,
   },
   buttonText: {
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  picker: {
+    width: "100%",
+    backgroundColor: "white",
+    borderRadius: 5,
   },
 });
 

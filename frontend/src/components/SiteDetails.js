@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import axios from "axios";
+import { Picker } from "@react-native-picker/picker";
 
 const logo = require("../../assets/site360.png");
 
@@ -22,6 +23,21 @@ const SiteDetails = () => {
   const [currentFaults, setCurrentFaults] = useState("");
   const [maintenanceRecords, setMaintenanceRecords] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const siteOptions = [
+    "Dompe",
+    "Biyagama",
+    "Kaduwela",
+    "Malwana",
+    "Hanwella",
+    "Padukka",
+    "Horana",
+    "Homagama",
+    "Ragama",
+    "Delgoda",
+    "Kelaniya",
+    "Kiribathgoda",
+  ];
 
   const handleDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || date;
@@ -77,12 +93,15 @@ const SiteDetails = () => {
         />
 
         <Text style={styles.label}>Site Location</Text>
-        <TextInput
-          style={styles.input}
-          value={siteLocation}
-          onChangeText={setSiteLocation}
-          placeholder="Enter Location of the Site"
-        />
+        <Picker
+          selectedValue={siteLocation}
+          style={styles.picker}
+          onValueChange={(itemValue, itemIndex) => setSiteLocation(itemValue)}
+        >
+          {siteOptions.map((site, index) => (
+            <Picker.Item key={index} label={site} value={site} />
+          ))}
+        </Picker>
 
         <Text style={styles.label}>Date</Text>
         <TouchableOpacity
@@ -165,6 +184,11 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  picker: {
+    width: "100%",
+    backgroundColor: "white",
+    borderRadius: 5,
   },
 });
 
